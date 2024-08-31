@@ -8,6 +8,8 @@ class Files(models.Model):
     
     class Meta:
         ordering = ['created']
+        verbose_name = 'File'
+        verbose_name_plural = 'Files'
 
 
 class Users(models.Model):
@@ -21,3 +23,5 @@ class Users(models.Model):
     
     class Meta:
         ordering = ['full_name']
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
