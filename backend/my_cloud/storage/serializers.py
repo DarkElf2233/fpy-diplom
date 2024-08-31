@@ -11,4 +11,4 @@ class UsersSerializer(serializers.ModelSerializer):
 class FilesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Files
-        fields = ['id', 'created', 'title', 'path_to_file']
+        fields = ['id', 'title', 'path_to_file']
