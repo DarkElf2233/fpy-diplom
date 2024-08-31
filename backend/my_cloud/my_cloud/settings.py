@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'rest_framework'
+    'rest_framework',
     'storage'
 ]
 
@@ -65,8 +65,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'my_cloud',
-        'USER': 'my_cloud',
-        'PASSWORD': 'my_cloud',
+        'USER': 'my_cloud_user',
+        'PASSWORD': 'cloud123',
         'HOST': 'localhost',
         'PORT': '5432'
     }

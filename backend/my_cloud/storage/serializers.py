@@ -1,14 +1,14 @@
-from storage.models import User, File
+from storage.models import Users, Files
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['url', 'username', 'full_name', 'email', 'password', 'role', 'path']
+        model = Users
+        fields = ['id', 'username', 'full_name', 'email', 'password', 'role', 'path_to_user']
 
 
-class FileSerializer(serializers.ModelSerializer):
+class FilesSerializer(serializers.ModelSerializer):
     class Meta:
-        model = File
-        fields = ['url', 'name']
+        model = Files
+        fields = ['id', 'created', 'title', 'path_to_file']
