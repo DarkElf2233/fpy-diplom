@@ -1,6 +1,7 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
+from django.http import Http404
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from storage.models import Users, Files
 from storage.serializers import FilesSerializer, UsersSerializer
@@ -8,17 +9,16 @@ from storage.serializers import FilesSerializer, UsersSerializer
 
 ### Users ###
 
-@api_view(['GET', 'POST'])
-def users_list(request, format=None):
+class UsersList(APIView):
     """
     List all users, or create a new user.
     """
-    if request.method == 'GET':
+    def get(self, request, format=None):
         users = Users.objects.all()
         serializer = UsersSerializer(users, many=True)
         return Response(serializer.data)
 
-    elif request.method == 'POST':
+    def post(self, request, format=None):
         serializer = UsersSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -26,45 +26,47 @@ def users_list(request, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def user_detail(request, pk, format=None):
+class UserDetail(APIView):
     """
     Retrieve, update or delete a user.
     """
-    try:
-        user = Users.objects.get(pk=pk)
-    except Users.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def get_object(self, pk):
+        try:
+            return Users.objects.get(pk=pk)
+        except Users.DoesNotExist:
+            raise Http404
 
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        user = self.get_object(pk)
         serializer = UsersSerializer(user)
         return Response(serializer.data)
 
-    elif request.method == 'PUT':
+    def put(self, request, pk, format=None):
+        user = self.get_object(pk)
         serializer = UsersSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    def delete(self, request, pk, format=None):
+        user = self.get_object(pk)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+    
 
 ### Files ###
 
-@api_view(['GET', 'POST'])
-def files_list(request, format=None):
+class FilesList(APIView):
     """
     List all files, or create a new file.
     """
-    if request.method == 'GET':
+    def get(self, request, format=None):
         files = Files.objects.all()
         serializer = FilesSerializer(files, many=True)
         return Response(serializer.data)
 
-    elif request.method == 'POST':
+    def post(self, request, format=None):
         serializer = FilesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -72,27 +74,30 @@ def files_list(request, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def file_detail(request, pk, format=None):
+class FileDetail(APIView):
     """
     Retrieve, update or delete a file.
     """
-    try:
-        file = Files.objects.get(pk=pk)
-    except Files.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def get_object(self, pk):
+        try:
+            return Files.objects.get(pk=pk)
+        except Files.DoesNotExist:
+            raise Http404
 
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        file = self.get_object(pk)
         serializer = FilesSerializer(file)
         return Response(serializer.data)
 
-    elif request.method == 'PUT':
+    def put(self, request, pk, format=None):
+        file = self.get_object(pk)
         serializer = FilesSerializer(file, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    def delete(self, request, pk, format=None):
+        file = self.get_object(pk)
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
