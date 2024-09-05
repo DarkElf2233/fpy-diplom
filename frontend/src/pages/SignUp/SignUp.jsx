@@ -1,48 +1,87 @@
+import React, { Component } from 'react'
+import { v4 } from 'uuid'
+import '../../App.css'
+import { API_URL_USERS } from '../../constants'
+
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import Col from 'react-bootstrap/Col';
 
-export const SignUp = () => {
-  return (
-    <Form>
-      <Form.Group className="mb-3" controlId="formBasicText">
-        <Form.Label>Имя</Form.Label>
-        <Col xs={5}>
-          <Form.Control type="text" placeholder="Введите имя" />
-        </Col>
-      </Form.Group>
+import { FormItem } from '../../components/FormItem';
 
-      <Form.Group className="mb-3" controlId="formBasicText">
-        <Form.Label>Фамилия</Form.Label>
-        <Col xs={5}>
-          <Form.Control type="text" placeholder="Введите фамилию" />
-        </Col>
-      </Form.Group>
+export class SignUp extends Component {
+  constructor(props) {
+    super(props)
 
-      <Form.Group className="mb-3" controlId="formBasicText">
-        <Form.Label>Придумайте логин</Form.Label>
-        <Col xs={5}>
-          <Form.Control type="text" placeholder="Введите логин" />
-        </Col>
-      </Form.Group>
+    this.state = {
+      message: ''
+    }
 
-      <Form.Group className="mb-3" controlId="formBasicEmail">
-        <Form.Label>Ваш email</Form.Label>
-        <Col xs={5}>
-          <Form.Control type="email" placeholder="Введите email" />
-        </Col>
-      </Form.Group>
+    this.formItems = [
+      { label: 'Имя', type: 'text', placeholder: 'Введите имя', controlId: 'formBasicFirstName' },
+      { label: 'Фамилия', type: 'text', placeholder: 'Введите фамилию', controlId: 'formBasicLastName' },
+      { label: 'Придумайте логин', type: 'text', placeholder: 'Введите логин', controlId: 'formBasicUsername' },
+      { label: 'Ваш email', type: 'email', placeholder: 'Введите email', controlId: 'formBasicEmail' },
+      { label: 'Придумайте пароль', type: 'password', placeholder: 'Введите пароль', controlId: 'formBasicPassword' },
+    ]
+  }
 
-      <Form.Group className="mb-3" controlId="formBasicPassword">
-        <Form.Label>Придумайте пароль</Form.Label>
-        <Col xs={5}>
-          <Form.Control type="password" placeholder="Введите пароль" />
-        </Col>
-      </Form.Group>
+  handleSubmit = (e) => {
+    e.preventDefault()
 
-      <Button variant="primary" type="submit">
-        Submit
-      </Button>
-    </Form>
-  )
+    const form = e.currentTarget
+    const full_name = `${form[0].value} ${form[1].value}`
+    const username = form[2].value
+    const email = form[3].value
+    const password = form[4].value
+
+    try {
+      const res = fetch(API_URL_USERS, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          full_name: full_name,
+          username: username,
+          email: email,
+          password: password
+        })
+      })
+      if (res.status === 201) {
+        this.setState({
+          message: 'Успех!'
+        })
+      } else if (res.status === 400) {
+        this.setState({
+          message: res.message
+        })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  render() {
+    return (
+      <div className="sign-up">
+        <h1 className="sign-up__title">Регистрация</h1>
+        <p>{this.state.message}</p>
+        <Form onSubmit={this.handleSubmit}>
+          {this.formItems.map((item) => (
+            <FormItem
+              key={v4()}
+              label={item.label}
+              type={item.type}
+              placeholder={item.placeholder}
+              controlId={item.controlId}
+            />
+          ))}
+
+          <Button variant="primary" type="submit">
+            Создать
+          </Button>
+        </Form>
+      </div>
+    )
+  }
 }

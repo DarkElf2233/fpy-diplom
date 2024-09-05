@@ -6,10 +6,9 @@ import { NavItem } from '../NavItem'
 
 export const Navbar = () => {
   const navbarItems = [
-    {name: 'Home', link: '/'},
-    {name: 'Sign In', link: '/signin'},
-    {name: 'Sign Up', link: '/signup'},
-    {name: 'Storage', link: '/storage'},
+    { id: 1, name: 'Вход', link: '/signin' },
+    { id: 2, name: 'Регистрация', link: '/signup' },
+    { id: 3, name: 'Хранилище', link: '/storage' },
   ]
 
   return (
@@ -18,7 +17,7 @@ export const Navbar = () => {
         <NavbarBootstrap.Brand href="/">My Cloud</NavbarBootstrap.Brand>
         <Nav className="md-right">
           {navbarItems.map((item) => (
-            <NavItem name={item.name} link={item.link} />
+            <NavItem key={item.id} name={item.name} link={item.link} />
           ))}
         </Nav>
       </Container>

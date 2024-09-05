@@ -1,4 +1,64 @@
-.content {
-    margin-top: 100px;
-    margin-left: 50px;
+/*** Navbar ***/
+a {
+    color: rgba(0,0,0, 0.65);
+    padding: 0.5rem 0.6rem;
+}
+
+/*** Home Page ***/
+.home {
+    margin-top: 15%;
+    margin-left: 8%;
+}
+
+.home__title {
+    margin-bottom: 10px;
+}
+
+.home__info {
+    font-size: 17px;
+    margin-bottom: 25px;
+}
+
+/*** Sign In ***/
+.sign-in {
+    margin-top: 9%;
+    margin-left: 8%;
+}
+
+.sign-in__title {
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+/*** Sign Up ***/
+.sign-up {
+    margin-top: 9%;
+    margin-left: 8%;
+}
+
+.sign-up__title {
+    font-size: 32px;
+    margin-bottom: 35px;
+}
+
+/*** Storage ***/
+.storage {
+    margin-top: 9%;
+    margin-left: 7%;
+}
+
+.storage__title {
+    font-size: 32px;
+    margin-bottom: 45px;
+}
+
+.storage__file {
+    height: 120px;
+    width: 80px;
+    text-align: center;
+}
+
+.storage__file-name {
+    margin-top: 5px;
+    font-size: 19px;
 }
