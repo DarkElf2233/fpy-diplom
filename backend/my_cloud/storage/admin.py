@@ -5,8 +5,8 @@ from storage.models import Users, Files
 
 @admin.register(Users)
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email', 'full_name', 'role', 'path_to_user']
+    list_display = ['username', 'email', 'password', 'full_name', 'role']
 
 @admin.register(Files)
 class FilesAdmin(admin.ModelAdmin):
-    list_display = ['title', 'path_to_file']
+    list_display = ['title', 'user']

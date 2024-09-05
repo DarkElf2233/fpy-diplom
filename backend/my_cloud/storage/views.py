@@ -1,5 +1,6 @@
 from rest_framework import status
 from django.http import Http404
+from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,6 +20,9 @@ class UsersList(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        request.data['role'] = 'USER'
+
+        request.data['password'] = make_password(request.data['password'])
         serializer = UsersSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -26,6 +30,7 @@ class UsersList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# FOR BACKEND ONLY
 class UserDetail(APIView):
     """
     Retrieve, update or delete a user.
