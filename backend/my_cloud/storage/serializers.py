@@ -11,4 +11,8 @@ class UsersSerializer(serializers.ModelSerializer):
 class FilesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Files
-        fields = ['id', 'title', 'user']
+        fields = ['id', 'title', 'comment', 'size', 'created', 'last_download', 'user']
+
+
+class ErrorSerializer(serializers.Serializer):
+    message = serializers.CharField(max_length=200)

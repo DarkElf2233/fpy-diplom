@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.timezone import now
 
 class Users(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -16,10 +16,13 @@ class Users(models.Model):
 
 
 class Files(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100)
+    comment = models.CharField(max_length=250, default='')
+    size = models.IntegerField(default=0)
+    created = models.DateField(auto_now_add=True)
+    last_download = models.DateField(default=now())
     user = models.ForeignKey(Users, default=1, on_delete=models.CASCADE)
-   
+
     class Meta:
         ordering = ['created']
         verbose_name = 'File'

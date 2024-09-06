@@ -44,20 +44,13 @@ export class SignUp extends Component {
           full_name: full_name,
           username: username,
           email: email,
-          password: password
+          password: password,
+          create: true
         })
       })
-      if (res.status === 201) {
-        this.setState({
-          message: 'Успех!'
-        })
-      } else if (res.status === 400) {
-        this.setState({
-          message: res.message
-        })
-      }
     } catch (err) {
-      console.error(err)
+      console.log(err.name)
+      console.log(err.message)
     }
   }
 

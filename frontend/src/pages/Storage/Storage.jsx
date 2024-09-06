@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 import { API_URL_STORAGE } from '../../constants'
 
-import Stack from 'react-bootstrap/Stack';
+import Table from 'react-bootstrap/Table';
 
 import { StorageItem } from '../../components/StorageItem'
 
@@ -34,11 +34,22 @@ export class Storage extends Component {
         {!this.state.files || this.state.files.length <= 0 ? (
           <p>Упс, вы ещё не загрузили ни одного файла.</p>
         ) : (
-          <Stack direction='horizontal' gap={5}>
-            {this.state.files.map((file) => (
-              <StorageItem key={file.id} file={file} />
-            ))}
-          </Stack>
+          <Table>
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Комментарий</th>
+                <th>Размер</th>
+                <th>Дата загрузки</th>
+                <th>Дата последнего скачивания</th>
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.files.map(file => (
+                <StorageItem file={file} />
+              ))}
+            </tbody>
+          </Table>
         )}
       </div>
     )
