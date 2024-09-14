@@ -5,7 +5,7 @@
 ### ШАГ 1: Backend
 Чтобы запустить backend сервер перейдите в папку **backend** и создайте виртуальное окружение:
 ```
-py -m venv .env
+python -m venv .env
 ```
 
 И активируйте её
@@ -20,9 +20,9 @@ cd .\.env\Scripts\
 pip install -r requirements.txt
 ```
 
-После этого перейдите в папку **my_cloud** запустите сервер:
+После этого перейдите в папку **my_cloud** и запустите сервер:
 ```
-py manage.py runserver
+python manage.py runserver
 ```
 
 Если вы захотите воспользоваться админ панелью нужно  создать суперпользователя:
