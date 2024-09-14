@@ -1,6 +1,8 @@
-from rest_framework import status
 from django.http import Http404
 from django.contrib.auth.hashers import make_password
+from passlib.handlers.django import django_pbkdf2_sha256
+
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -22,38 +24,59 @@ class UsersList(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        data = {
+            'message': '',
+            'input_name': ''
+        }
+
         if request.data['create']:
+            # Validate username
             username = request.data['username']
             
-            message = {}
-            # Validate username
-            if not username.isalpha() and not username.isdigit():
-                message['message'] = 'Логин должен состоять только из букв и цифр.'
-                error_serializer = ErrorSerializer(message)
+            unique_user = False
+            try:
+                user = Users.objects.get(username=username)
+            except Users.DoesNotExist:
+                unique_user = True
+            if not unique_user:
+                data['message'] = 'Пользователь с таким логином уже существует.'
+                data['input_name'] = 'username'
+                error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', username)
+            if match_symbols:
+                data['message'] = 'Логин должен состоять только из букв и цифр.'
+                data['input_name'] = 'username'
+                error_serializer = ErrorSerializer(data)
+                return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+            
             if not username[0].isalpha():
-                message['message'] = 'Первым символом логина должна быть буква.'
-                error_serializer = ErrorSerializer(message)
+                data['message'] = 'Первым символом логина должна быть буква.'
+                data['input_name'] = 'username'
+                error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
             if len(username) < 4 or len(username) > 20:
-                message['message'] = 'Длина логина должна быть не меньше 4 и не больше 20.'
+                data['message'] = 'Длина логина должна быть не меньше 4 и не больше 20.'
+                data['input_name'] = 'username'
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
             password = request.data['password']
             # Validate password
             if len(password) < 6:
-                message['message'] = 'Пароль слишком короткий.'
-                error_serializer = ErrorSerializer(message)
+                data['message'] = 'Длина пароля должна быть не меньше 6.'
+                data['input_name'] = 'password'
+                error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
             match_letters = re.search(r'[a-zA-Z]+', password)
             match_numbers = re.search(r'[0-9]+', password)
-            match_symbols = re.search(r'[@_!#$%^&*()<>?/\|}{~:]+', password)
+            match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', password)
             if not match_letters or not match_numbers or not match_symbols:
-                message['message'] = 'В пароле должна быть хотя бы одна буква, одна цифра и один специальный символ.'
-                error_serializer = ErrorSerializer(message)
+                data['message'] = 'В пароле должна быть хотя бы одна буква, одна цифра и один специальный символ.'
+                data['input_name'] = 'password'
+                error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
             # Adding user role
@@ -71,11 +94,16 @@ class UsersList(APIView):
             try:
                 user = Users.objects.get(username=request.data['username'])
             except Users.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                data['message'] = 'Неправильное имя пользователя или пароль.'
+                error_serializer = ErrorSerializer(data)
+                return Response(error_serializer.data, status=status.HTTP_404_NOT_FOUND)
 
             # Match passwords
-            if user.password != make_password(request.data['password']):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            verify = django_pbkdf2_sha256.verify(request.data['password'], user.password)
+            if not verify:
+                data['message'] = 'Неправильное имя пользователя или пароль.'
+                error_serializer = ErrorSerializer(data)
+                return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
             return Response(status=status.HTTP_200_OK)
 
 
@@ -121,6 +149,8 @@ class FilesList(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        request.data['user'] = 21
+
         serializer = FilesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

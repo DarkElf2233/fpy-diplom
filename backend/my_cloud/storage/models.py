@@ -1,5 +1,6 @@
 from django.db import models
-from django.utils.timezone import now
+import datetime
+
 
 class Users(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -20,8 +21,9 @@ class Files(models.Model):
     comment = models.CharField(max_length=250, default='')
     size = models.IntegerField(default=0)
     created = models.DateField(auto_now_add=True)
-    last_download = models.DateField(default=now())
+    last_download = models.DateField(default=datetime.date.today())
     user = models.ForeignKey(Users, default=1, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='storage_files', default='')
 
     class Meta:
         ordering = ['created']
