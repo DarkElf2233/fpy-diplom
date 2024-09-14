@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import make_password
 from passlib.handlers.django import django_pbkdf2_sha256
 
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -143,14 +144,14 @@ class FilesList(APIView):
     """
     List all files, or create a new file.
     """
+    parser_classes = (MultiPartParser, FormParser)
+
     def get(self, request, format=None):
         files = Files.objects.all()
         serializer = FilesSerializer(files, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        request.data['user'] = 21
-
         serializer = FilesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

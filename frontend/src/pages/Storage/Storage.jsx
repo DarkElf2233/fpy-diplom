@@ -27,16 +27,17 @@ export const Storage = () => {
     const image = form[0].files[0]
     const comment = form[1].value
 
-    const data = {
-      title: image.name,
-      size: image.size,
-      comment: comment,
-    }
+    let formData = new FormData();
+    formData.append("image", image, image.name);
+    formData.append("title", image.name);
+    formData.append("size", image.size);
+    formData.append("comment", comment);
+    formData.append("user", 21);
     
     axios
-      .post(API_URL_STORAGE, data, {
+      .post(API_URL_STORAGE, formData, {
         headers: {
-          "content-type": "application/json",
+          "content-type": "multipart/form-data",
         },
       })
       .then((res) => {
