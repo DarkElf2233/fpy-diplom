@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-
 import './App.css'
 
 // Pages
@@ -10,6 +9,7 @@ import { Storage } from './pages/Storage'
 
 // Components
 import { Navbar } from './components/Navbar';
+import { PageNotFound } from './components/PageNotFound';
 
 function App() {
   return (
@@ -20,12 +20,11 @@ function App() {
           <Route path='/signup' Component={SignUp} />
           <Route path='/signin' Component={SignIn} />
           <Route path='/storage' Component={Storage} />
+          <Route path='*' Component={PageNotFound} />
         </Routes>
       </div>
 
-      <div className="">
-        <Navbar />
-      </div>
+      <Navbar />
     </div>
   );
 }

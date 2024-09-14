@@ -1,80 +1,139 @@
-import React, { Component } from 'react'
-import { v4 } from 'uuid'
-import '../../App.css'
+import { useState } from 'react'
+import { useNavigate } from "react-router-dom";
 import { API_URL_USERS } from '../../constants'
+import axios from "axios";
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Col from "react-bootstrap/Col"
 
-import { FormItem } from '../../components/FormItem';
+export const SignUp = () => {
+  const [message, setMessage] = useState('')
+  const [validated, setValidated] = useState(false);
 
-export class SignUp extends Component {
-  constructor(props) {
-    super(props)
+  const navigate = useNavigate()
 
-    this.state = {
-      message: ''
-    }
-
-    this.formItems = [
-      { label: 'Имя', type: 'text', placeholder: 'Введите имя', controlId: 'formBasicFirstName' },
-      { label: 'Фамилия', type: 'text', placeholder: 'Введите фамилию', controlId: 'formBasicLastName' },
-      { label: 'Придумайте логин', type: 'text', placeholder: 'Введите логин', controlId: 'formBasicUsername' },
-      { label: 'Ваш email', type: 'email', placeholder: 'Введите email', controlId: 'formBasicEmail' },
-      { label: 'Придумайте пароль', type: 'password', placeholder: 'Введите пароль', controlId: 'formBasicPassword' },
-    ]
-  }
-
-  handleSubmit = (e) => {
-    e.preventDefault()
-
+  const handleSubmit = (e) => {
+    e.preventDefault();
     const form = e.currentTarget
-    const full_name = `${form[0].value} ${form[1].value}`
-    const username = form[2].value
-    const email = form[3].value
-    const password = form[4].value
 
-    try {
-      const res = fetch(API_URL_USERS, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: 'POST',
-        body: JSON.stringify({
-          full_name: full_name,
-          username: username,
-          email: email,
-          password: password,
-          create: true
+    let isValid = true
+    if (form.checkValidity() === false) {
+      isValid = false
+    }
+
+    setValidated(true);
+
+    if (isValid) {
+      const full_name = `${form[0].value} ${form[1].value}`
+      const username = form[2].value
+      const email = form[3].value
+      const password = form[4].value
+
+      const data = {
+        full_name: full_name,
+        username: username,
+        email: email,
+        password: password,
+        create: true
+      }
+      axios
+        .post(API_URL_USERS, data, {
+          'Content-Type': 'application/json'
         })
-      })
-    } catch (err) {
-      console.log(err.name)
-      console.log(err.message)
+        .then(res => {
+          if (res.status === 201) {
+            navigate('/storage')
+          }
+        })
+        .catch(err => {
+          const data = err.response.data
+          
+          setMessage(data.message)
+          if (data.input_name === 'username') {
+            form[2].value = ''
+          }
+          if (data.input_name === 'password') {
+            form[4].value = ''
+          }
+        })
     }
   }
 
-  render() {
-    return (
-      <div className="sign-up">
-        <h1 className="sign-up__title">Регистрация</h1>
-        <p>{this.state.message}</p>
-        <Form onSubmit={this.handleSubmit}>
-          {this.formItems.map((item) => (
-            <FormItem
-              key={v4()}
-              label={item.label}
-              type={item.type}
-              placeholder={item.placeholder}
-              controlId={item.controlId}
-            />
-          ))}
+  return (
+    <div className="sign-up">
+      <h1 className="sign-up__title">Регистрация</h1>
+      <Form noValidate validated={validated} onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpFirstName'>
+          <Form.Label>Имя</Form.Label>
+          <Form.Control
+            type='text'
+            placeholder='Введите имя'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите имя.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpLastName'>
+          <Form.Label>Фамилия</Form.Label>
+          <Form.Control
+            type='text'
+            placeholder='Фамилия'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйста введите фамилию.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpUsername'>
+          <Form.Label>Придумайте логин</Form.Label>
+          <Form.Control
+            type='text'
+            placeholder='Введите логин'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите логин.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpEmail'>
+          <Form.Label>Ваш email</Form.Label>
+          <Form.Control
+            type='email'
+            placeholder='Введите email'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите email.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpPassword'>
+          <Form.Label>Придумайте пароль</Form.Label>
+          <Form.Control
+            type='password'
+            placeholder='Введите пароль'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите пароль.
+          </Form.Control.Feedback>
+        </Form.Group>
 
-          <Button variant="primary" type="submit">
+        <Form.Text>{message}</Form.Text>
+        {message !== '' ? (
+          <>
+            <br />
+            <Button type="submit" className='mt-3'>
+              Создать
+            </Button>
+          </>
+        ) : (
+          <Button type="submit">
             Создать
           </Button>
-        </Form>
-      </div>
-    )
-  }
+        )}
+      </Form>
+    </div>
+  )
 }

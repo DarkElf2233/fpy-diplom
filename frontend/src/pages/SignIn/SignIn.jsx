@@ -1,72 +1,98 @@
-import React, { Component } from 'react'
-import { v4 } from 'uuid';
-import '../../App.css'
+import { useState } from 'react'
+import { useNavigate } from "react-router-dom";
 import { API_URL_USERS } from '../../constants'
+import axios from "axios";
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Col from "react-bootstrap/Col"
 
-import { FormItem } from '../../components/FormItem';
+export const SignIn = () => {
+  const [message, setMessage] = useState('')
+  const [validated, setValidated] = useState(false);
 
-export class SignIn extends Component {
-  constructor(props) {
-    super(props)
+  const navigate = useNavigate()
 
-    this.state = {
-      message: ''
-    }
-
-    this.formItems = [
-      { label: 'Ваш логин', type: 'text', placeholder: 'Введите логин', controlId: 'formBasicLogin' },
-      { label: 'Пароль', type: 'password', placeholder: 'Введите пароль', controlId: 'formBasicPassword' },
-    ]
-  }
-
-  handleSubmit = (e) => {
-    e.preventDefault()
-
+  const handleSubmit = (e) => {
+    e.preventDefault();
     const form = e.currentTarget
-    const username = form[0].value
-    const password = form[1].value
 
-    try {
-      fetch(API_URL_USERS, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: 'POST',
-        body: JSON.stringify({
-          username: username,
-          password: password,
-          create: false
+    let isValid = true
+    if (form.checkValidity() === false) {
+      isValid = false
+    }
+
+    setValidated(true);
+
+    if (isValid) {
+      const username = form[0].value
+      const password = form[1].value
+
+      const data = {
+        username: username,
+        password: password,
+        create: false
+      }
+      axios
+        .post(API_URL_USERS, data, {
+          'Content-Type': 'application/json'
         })
-      })
-    } catch (err) {
-      console.error(err)
+        .then(res => {
+          if (res.status === 200) {
+            navigate('/storage')
+          }
+        })
+        .catch(err => {
+          const data = err.response.data
+
+          setMessage(data.message)
+          form[0].value = ''
+          form[1].value = ''
+        })
     }
   }
 
-  render() {
-    return (
-      <div className="sign-in">
-        <h1 className='sign-in__title'>Вход</h1>
-        <Form onSubmit={this.handleSubmit}>
-          {this.formItems.map((item) => (
-            <FormItem
-              key={v4()}
-              label={item.label}
-              type={item.type}
-              placeholder={item.placeholder}
-              controlId={item.controlId}
-            />
-          ))}
+  return (
+    <div className="sign-in">
+      <h1 className='sign-in__title'>Вход</h1>
+      <Form noValidate validated={validated} onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignInUsername'>
+          <Form.Label>Ваш логин</Form.Label>
+          <Form.Control
+            type='text'
+            placeholder='Введите логин'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите логин.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignInPassword'>
+          <Form.Label>Пароль</Form.Label>
+          <Form.Control
+            type='password'
+            placeholder='Введите пароль'
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Пожалуйта введите пароль.
+          </Form.Control.Feedback>
+        </Form.Group>
 
+        <Form.Text>{message}</Form.Text>
+        {message !== '' ? (
+          <>
+            <br />
+            <Button variant="primary" type="submit" className='mt-3'>
+              Войти
+            </Button>
+          </>
+        ) : (
           <Button variant="primary" type="submit">
             Войти
           </Button>
-        </Form>
-      </div>
-    )
-  }
+        )}
+      </Form>
+    </div>
+  )
 }
-
