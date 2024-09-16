@@ -14,7 +14,7 @@ export const SignUp = () => {
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault()
     const form = e.currentTarget
 
     let isValid = true
@@ -43,12 +43,13 @@ export const SignUp = () => {
         })
         .then(res => {
           if (res.status === 201) {
-            navigate('/storage')
+            const user = res.data
+            navigate('/storage', { state: user })
           }
         })
         .catch(err => {
           const data = err.response.data
-          
+
           setMessage(data.message)
           if (data.input_name === 'username') {
             form[2].value = ''
@@ -108,7 +109,7 @@ export const SignUp = () => {
             Пожалуйта введите email.
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignUpPassword'>
+        <Form.Group as={Col} md="3" controlId='formSignUpPassword'>
           <Form.Label>Придумайте пароль</Form.Label>
           <Form.Control
             type='password'
@@ -120,19 +121,15 @@ export const SignUp = () => {
           </Form.Control.Feedback>
         </Form.Group>
 
-        <Form.Text>{message}</Form.Text>
-        {message !== '' ? (
-          <>
-            <br />
-            <Button type="submit" className='mt-3'>
-              Создать
-            </Button>
-          </>
+        {message ? (
+          <Form.Text className='d-block mt-3'>{message}</Form.Text>
         ) : (
-          <Button type="submit">
-            Создать
-          </Button>
+          <Form.Text>{message}</Form.Text>
         )}
+
+        <Button type="submit" className='mt-3'>
+          Создать
+        </Button>
       </Form>
     </div>
   )

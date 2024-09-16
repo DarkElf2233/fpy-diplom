@@ -80,8 +80,6 @@ class UsersList(APIView):
                 error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
-            # Adding user role
-            request.data['role'] = 'USER'
             # Hashing password
             request.data['password'] = make_password(request.data['password'])
 
@@ -105,7 +103,16 @@ class UsersList(APIView):
                 data['message'] = 'Неправильное имя пользователя или пароль.'
                 error_serializer = ErrorSerializer(data)
                 return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
-            return Response(status=status.HTTP_200_OK)
+
+            data = {
+                'id': user.pk,
+                'username': user.username,
+                'full_name': user.full_name,
+                'email': user.email,
+                'password': user.password,
+                'role': user.role,
+            }
+            return Response(data, status=status.HTTP_200_OK)
 
 
 # FOR BACKEND ONLY

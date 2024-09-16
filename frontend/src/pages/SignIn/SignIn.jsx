@@ -39,7 +39,8 @@ export const SignIn = () => {
         })
         .then(res => {
           if (res.status === 200) {
-            navigate('/storage')
+            const user = res.data
+            navigate('/storage', { state: user })
           }
         })
         .catch(err => {
