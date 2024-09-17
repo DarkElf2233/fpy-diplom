@@ -1,6 +1,6 @@
-import os
-import uuid
 from django.db import models
+from uuid import uuid4
+import os
 import datetime
 
 
@@ -20,8 +20,8 @@ class Users(models.Model):
 
 def user_path(instance, filename):
     ext = filename.split('.')[-1]
-    filename = '{}.{}'.format(uuid.uuid4().hex[:8], ext)
-    return os.path.join(instance.user.username, filename)
+    filename = f'{uuid4().hex[:8]}.{ext}'
+    return os.path.join('storage_files', instance.user.username, filename)
 
 
 class Files(models.Model):
