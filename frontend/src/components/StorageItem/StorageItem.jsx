@@ -17,12 +17,18 @@ export const StorageItem = ({ file }) => {
     return !previousShow
   });
 
+  const lastDownloadDate = new Date(file.last_download);
+  const newLastDownload = `${lastDownloadDate.getDate()}/${lastDownloadDate.getMonth() + 1}/${lastDownloadDate.getFullYear()}`
+
+  const createdDate = new Date(file.created);
+  const newCreated = `${createdDate.getDate()}/${createdDate.getMonth() + 1}/${createdDate.getFullYear()}`
+
   return (
     <tr>
       <td>{file.title}</td>
       <td>{file.size}</td>
-      <td>{file.created}</td>
-      <td>{file.last_download}</td>
+      <td>{newCreated}</td>
+      <td>{newLastDownload}</td>
       <td className='storage-comment'>{file.comment}</td>
       <td>
         <Badge className='mx-4 mt-1' bg='success' text='light' onClick={toggleUpdate}>

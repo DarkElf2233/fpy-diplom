@@ -17,9 +17,14 @@ export const Storage = () => {
   const user = location.state
 
   const getFiles = () => {
+    let formData = new FormData();
+    formData.append("user", user.id);
+    formData.append("get", true);
     axios
-      .get(API_URL_STORAGE + '?format=json')
-      .then(res => {
+      .post(API_URL_STORAGE, formData, {
+        'Content-Type': 'multipart/form-data'
+      })
+      .then((res) => {
         setFiles(res.data)
       })
   }
@@ -41,14 +46,13 @@ export const Storage = () => {
     const image = form[0].files[0]
     const comment = form[1].value
 
-    console.log(user)
-    console.log(user.id)
     let formData = new FormData();
     formData.append("image", image, image.name);
     formData.append("title", image.name);
     formData.append("size", image.size);
     formData.append("comment", comment);
     formData.append("user", user.id);
+    formData.append("get", false);
 
     axios
       .post(API_URL_STORAGE, formData, {
