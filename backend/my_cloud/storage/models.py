@@ -1,3 +1,5 @@
+import os
+import uuid
 from django.db import models
 import datetime
 
@@ -16,8 +18,10 @@ class Users(models.Model):
         verbose_name_plural = 'Users'
 
 
-def user_path(instance):
-    return instance.user.username
+def user_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = '{}.{}'.format(uuid.uuid4().hex[:8], ext)
+    return os.path.join(instance.user.username, filename)
 
 
 class Files(models.Model):

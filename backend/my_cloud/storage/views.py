@@ -21,8 +21,8 @@ class UsersList(APIView):
     """
     def get(self, request, format=None):
         users = Users.objects.all()
-        serializer = UsersSerializer(users, many=True)
-        return Response(serializer.data)
+        user_serializer = UsersSerializer(users, many=True)
+        return Response(user_serializer.data)
 
     def post(self, request, format=None):
         data = {
@@ -128,16 +128,16 @@ class UserDetail(APIView):
 
     def get(self, request, pk, format=None):
         user = self.get_object(pk)
-        serializer = UsersSerializer(user)
-        return Response(serializer.data)
+        user_serializer = UsersSerializer(user)
+        return Response(user_serializer.data)
 
     def put(self, request, pk, format=None):
         user = self.get_object(pk)
-        serializer = UsersSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_serializer = UsersSerializer(user, data=request.data)
+        if user_serializer.is_valid():
+            user_serializer.save()
+            return Response(user_serializer.data)
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         user = self.get_object(pk)
@@ -155,16 +155,20 @@ class FilesList(APIView):
 
     def get(self, request, format=None):
         files = Files.objects.all()
-        serializer = FilesSerializer(files, many=True)
-        return Response(serializer.data)
+        file_serializer = FilesSerializer(files, many=True)
+        return Response(file_serializer.data)
 
     def post(self, request, format=None):
-        serializer = FilesSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        if not request.data['get']:
+            file_serializer = FilesSerializer(data=request.data)
+            if file_serializer.is_valid():
+                file_serializer.save()
+                return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            files = Files.objects.filter(user=request.data['user'])
+            file_serializer = FilesSerializer(files, many=True)
+            return Response(file_serializer.data)
 
 class FileDetail(APIView):
     """
@@ -178,16 +182,16 @@ class FileDetail(APIView):
 
     def get(self, request, pk, format=None):
         file = self.get_object(pk)
-        serializer = FilesSerializer(file)
-        return Response(serializer.data)
+        files_serializer = FilesSerializer(file)
+        return Response(files_serializer.data)
 
     def put(self, request, pk, format=None):
         file = self.get_object(pk)
-        serializer = FilesSerializer(file, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        files_serializer = FilesSerializer(file, data=request.data)
+        if files_serializer.is_valid():
+            files_serializer.save()
+            return Response(files_serializer.data)
+        return Response(files_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         file = self.get_object(pk)
