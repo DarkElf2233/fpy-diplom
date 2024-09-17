@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useEffect, useContext } from 'react'
 import { API_URL_STORAGE } from '../../constants'
 import axios from "axios";
 
@@ -8,30 +7,29 @@ import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import Col from "react-bootstrap/Col"
 
+import { UserContext } from '../../components/UserContext';
+
 import { StorageItem } from '../../components/StorageItem'
 import { NoPermission } from '../../components/NoPermission';
 
 export const Storage = () => {
   const [files, setFiles] = useState([])
-  const location = useLocation()
-  const user = location.state
+  const { user } = useContext(UserContext);
 
   const getFiles = () => {
-    let formData = new FormData();
-    formData.append("user", user.id);
-    formData.append("get", true);
+    if (!user) {
+      return
+    }
     axios
-      .post(API_URL_STORAGE, formData, {
-        'Content-Type': 'multipart/form-data'
-      })
+      .get(API_URL_STORAGE + `?pk=${user.id}`)
       .then((res) => {
         setFiles(res.data)
       })
   }
-
   useEffect(() => {
     getFiles()
-  }, [files])
+    // eslint-disable-next-line
+  }, [])
 
   if (!user) {
     return (
@@ -52,13 +50,14 @@ export const Storage = () => {
     formData.append("size", image.size);
     formData.append("comment", comment);
     formData.append("user", user.id);
-    formData.append("get", false);
-
     axios
       .post(API_URL_STORAGE, formData, {
         headers: {
           "content-type": "multipart/form-data",
         },
+      })
+      .then(() => {
+        getFiles()
       })
       .catch((err) => console.log(err));
   }
@@ -99,7 +98,7 @@ export const Storage = () => {
           </thead>
           <tbody>
             {files.map(file => (
-              <StorageItem key={file.id} file={file} />
+              <StorageItem key={file.id} file={file} getFiles={getFiles} />
             ))}
           </tbody>
         </Table>
