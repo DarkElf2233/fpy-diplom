@@ -1,3 +1,4 @@
+import os
 from django.http import Http404, HttpResponseForbidden
 from django.conf import settings
 from django.utils.encoding import force_str
@@ -194,7 +195,7 @@ class FileDetail(APIView):
             files_serializer = FilesSerializer(file)
             return Response(files_serializer.data)
 
-        url = serve_private_file(pk=pk)
+        url = serve_private_file(request, pk=pk)
         return Response(url)
 
 
@@ -212,15 +213,15 @@ class FileDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-def serve_private_file(pk):
+def serve_private_file(request, pk):
     obj = Files.objects.get(id=pk)
 
     temporary_filename = f'temp_{obj.pk}_{uuid4().hex[:8]}.{obj.image.name.split(".")[-1]}'
-    temporary_path = Path(settings.MEDIA_ROOT).joinpath(temporary_filename)
+    temporary_path = os.path.join(settings.MEDIA_ROOT, temporary_filename)
 
     with open(temporary_path, 'wb+') as temp_file:
         for chunk in obj.image.open():
             temp_file.write(chunk)
     return {
-        'url': force_str(temporary_path)    
+        'url': 'http://' + request.get_host() + settings.MEDIA_URL + temporary_filename
     }
