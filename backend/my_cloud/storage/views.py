@@ -1,7 +1,5 @@
-import os
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404
 from django.conf import settings
-from django.utils.encoding import force_str
 from django.contrib.auth.hashers import make_password
 from passlib.handlers.django import django_pbkdf2_sha256
 
@@ -11,8 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import re
+import datetime
+import os
 from uuid import uuid4
-from pathlib import Path
 
 from storage.models import Users, Files
 from storage.serializers import FilesSerializer, UsersSerializer, ErrorSerializer
@@ -192,6 +191,7 @@ class FileDetail(APIView):
         download = request.GET.get('download', None)
         if download == None:
             file = self.get_object(pk)
+            file.last_download = datetime.date.today()
             files_serializer = FilesSerializer(file)
             return Response(files_serializer.data)
 
@@ -214,14 +214,19 @@ class FileDetail(APIView):
 
 
 def serve_private_file(request, pk):
-    obj = Files.objects.get(id=pk)
+    file = Files.objects.get(id=pk)
 
-    temporary_filename = f'temp_{obj.pk}_{uuid4().hex[:8]}.{obj.image.name.split(".")[-1]}'
+    temporary_filename = f'temp_{file.pk}_{uuid4().hex[:8]}.{file.image.name.split(".")[-1]}'
     temporary_path = os.path.join(settings.MEDIA_ROOT, temporary_filename)
 
     with open(temporary_path, 'wb+') as temp_file:
-        for chunk in obj.image.open():
+        for chunk in file.image.open():
             temp_file.write(chunk)
+
+    temp_url = 'http://' + request.get_host() + settings.MEDIA_URL + temporary_filename
+    special_url = 'http://' + request.get_host() + settings.MEDIA_URL + file.image.name
     return {
-        'url': 'http://' + request.get_host() + settings.MEDIA_URL + temporary_filename
+        'temp_url': temp_url,
+        'filename': file.title,
+        'special_url': special_url
     }

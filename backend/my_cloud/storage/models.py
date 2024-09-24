@@ -31,7 +31,7 @@ class Files(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     last_download = models.DateField(default=datetime.date.today())
     user = models.ForeignKey(Users, default=1, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=user_path, default='')
+    image = models.FileField(upload_to=user_path, default='')
 
     class Meta:
         ordering = ['created']
