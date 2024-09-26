@@ -47,7 +47,6 @@ export const StorageItem = ({ file, getFiles }) => {
         linkElement.target = '_blank'
 
         document.body.appendChild(linkElement)
-        console.log(linkElement)
         linkElement.click()
         document.body.removeChild(linkElement)
       })
