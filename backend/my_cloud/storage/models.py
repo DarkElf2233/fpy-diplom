@@ -1,7 +1,8 @@
 from django.db import models
 from uuid import uuid4
 import os
-import datetime
+# from storage.formatCheckers import MaxSizeFileField
+
 
 class Users(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -25,12 +26,12 @@ def user_path(instance, filename):
 
 class Files(models.Model):
     title = models.CharField(max_length=100)
-    comment = models.CharField(max_length=250, default='')
+    comment = models.CharField(max_length=250, default='', blank=True)
     size = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
-    last_download = models.DateField(default=datetime.date.today())
+    last_download = models.DateTimeField(null=True)
     user = models.ForeignKey(Users, default=1, on_delete=models.CASCADE)
-    image = models.FileField(upload_to=user_path, default='')
+    file = models.FileField(upload_to=user_path, default='')
 
     class Meta:
         ordering = ['created']
