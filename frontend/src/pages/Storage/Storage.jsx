@@ -1,58 +1,54 @@
-import { useState, useEffect, useContext } from 'react'
-import { API_URL_STORAGE } from '../../constants'
+import { useState, useEffect, useContext } from "react";
+import { API_URL_STORAGE } from "../../constants";
 import axios from "axios";
 
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Table from 'react-bootstrap/Table';
-import Col from "react-bootstrap/Col"
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Table from "react-bootstrap/Table";
+import Col from "react-bootstrap/Col";
 
-import { UserContext } from '../../components/UserContext';
+import { UserContext } from "../../components/UserContext";
 
-import { StorageItem } from '../../components/StorageItem'
-import { NoPermission } from '../../components/NoPermission';
+import { StorageItem } from "../../components/StorageItem";
+import { NoPermission } from "../../components/NoPermission";
 
 export const Storage = () => {
-  const [files, setFiles] = useState([])
+  const [files, setFiles] = useState([]);
   const { user } = useContext(UserContext);
 
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState("");
 
   const getFiles = () => {
     if (!user) {
-      return
+      return;
     }
-    axios
-      .get(API_URL_STORAGE + `?pk=${user.id}`)
-      .then((res) => {
-        setFiles(res.data)
-      })
-  }
+    axios.get(API_URL_STORAGE + `?pk=${user.id}`).then((res) => {
+      setFiles(res.data);
+    });
+  };
   useEffect(() => {
-    getFiles()
+    getFiles();
     // eslint-disable-next-line
-  }, [])
+  }, []);
 
   if (!user) {
-    return (
-      <NoPermission />
-    )
+    return <NoPermission />;
   }
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const form = e.currentTarget
-    const image = form[0].files[0]
-    const comment = form[1].value
+    const form = e.currentTarget;
+    const image = form[0].files[0];
+    const comment = form[1].value;
 
     if (!image) {
-      setMessage('Пожалуйста выберите файл.')
-      return
+      setMessage("Пожалуйста выберите файл.");
+      return;
     } else if (image.size === 0) {
-      form[0].value = null
-      setMessage('Нельзя загрузить пустой файл.')
-      return
+      form[0].value = null;
+      setMessage("Нельзя загрузить пустой файл.");
+      return;
     }
     let formData = new FormData();
     formData.append("file", image, image.name);
@@ -65,11 +61,13 @@ export const Storage = () => {
         headers: {
           "content-type": "multipart/form-data",
         },
+        maxBodyLength: 104857600,
+        maxContentLength: 104857600,
       })
       .then(() => {
         form[0].value = null
-        form[1].value = ''
-        setMessage('')
+        form[1].value = ""
+        setMessage("")
         getFiles()
       })
       .catch((err) => console.log(err));
@@ -84,22 +82,25 @@ export const Storage = () => {
           <Form.Label>Добавить новый файл</Form.Label>
           <Form.Control type="file" />
         </Form.Group>
-        <Form.Group className='mt-3' as={Col} md="4" controlId='formStorageComment'>
+        <Form.Group
+          className="mt-3"
+          as={Col}
+          md="4"
+          controlId="formStorageComment"
+        >
           <Form.Label>Комментарий (опциональный)</Form.Label>
-          <Form.Control
-            type='text'
-            as="textarea"
-            rows={3}
-          />
+          <Form.Control type="text" as="textarea" rows={3} />
         </Form.Group>
 
         {message ? (
-          <Form.Text className='d-block mt-3'>{message}</Form.Text>
+          <Form.Text className="d-block mt-3">{message}</Form.Text>
         ) : (
           <Form.Text>{message}</Form.Text>
         )}
 
-        <Button type='submit' className='mt-3 mb-4'>Добавить</Button>
+        <Button type="submit" className="mt-3 mb-4">
+          Добавить
+        </Button>
       </Form>
 
       {!files || files.length <= 0 ? (
@@ -117,7 +118,7 @@ export const Storage = () => {
             </tr>
           </thead>
           <tbody>
-            {files.map(file => (
+            {files.map((file) => (
               <StorageItem key={file.id} file={file} getFiles={getFiles} />
             ))}
           </tbody>

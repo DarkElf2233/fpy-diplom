@@ -1,13 +1,18 @@
+import { useContext } from 'react'
 import { useNavigate } from "react-router-dom";
+
+import { UserContext } from "../../components/UserContext";
 
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
 export const ConfirmLogout = ({ show, handleClose }) => {
   const navigate = useNavigate()
+  const { setUser } = useContext(UserContext);
 
   const handleLogout = () => {
     handleClose()
+    setUser(null)
 
     navigate('/')
   }

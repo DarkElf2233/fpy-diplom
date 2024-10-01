@@ -1,7 +1,6 @@
 from django.db import models
 from uuid import uuid4
 import os
-# from storage.formatCheckers import MaxSizeFileField
 
 
 class Users(models.Model):
