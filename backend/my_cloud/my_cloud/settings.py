@@ -97,6 +97,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Security settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+]
+
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
+
+# For PROD
+# CSRF_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_HTTPONLY = True
 
 # Internationalization
 LANGUAGE_CODE = 'Ru-ru'
@@ -106,7 +120,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(BASE_DIR, 'django-static/')

@@ -1,13 +1,18 @@
-from django.http import Http404
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
-from passlib.handlers.django import django_pbkdf2_sha256
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
+from django.http import Http404
 
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from passlib.handlers.django import django_pbkdf2_sha256
+import json
 import re
 import datetime
 import os
@@ -18,6 +23,48 @@ from storage.serializers import FilesSerializer, UsersSerializer
 
 
 ### Users ###
+
+@require_POST
+def login_view(request):
+    data = json.loads(request.body)
+    username = data.get('username')
+    password = data.get('password')
+    
+    user = authenticate(username=username, password=password)
+    if user is None:
+        return Response({
+            'message': 'Неправильное имя пользователя или пароль.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    login(request, user)
+    user_serializer = UsersSerializer(user)
+    return Response({
+        'user': user_serializer.data,
+        'message': 'Успешная регистрация.'
+    })
+
+
+def logout_view(request):
+    if not request.user.is_authenticated:
+        return Response({
+            'message': 'Вы не авторизаваны.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    logout(request)
+    return Response({'message': 'Успешный выход.'})
+
+
+@ensure_csrf_cookie
+def session_view(request):
+    if not request.user.is_authenticated:
+        return Response({"isAuthenticated": False})
+    return Response({"isAuthenticated": True})
+
+
+def whoami_view(request):
+    if not request.user.is_authenticated:
+        return Response({'is_authenticated': False})
+    return Response({'username': request.user.username})
+
 
 class UsersList(APIView):
     """
@@ -34,85 +81,60 @@ class UsersList(APIView):
             'input_name': ''
         }
 
-        if request.data['create']:
-            # Validate username
-            username = request.data['username']
-            
-            unique_user = False
-            try:
-                user = Users.objects.get(username=username)
-            except Users.DoesNotExist:
-                unique_user = True
-            if not unique_user:
-                data['message'] = 'Пользователь с таким логином уже существует.'
-                data['input_name'] = 'username'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
-            
-            match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', username)
-            if match_symbols:
-                data['message'] = 'Логин должен состоять только из букв и цифр.'
-                data['input_name'] = 'username'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
-            
-            if not username[0].isalpha():
-                data['message'] = 'Первым символом логина должна быть буква.'
-                data['input_name'] = 'username'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        # Validate username
+        username = request.data['username']
+        
+        unique_user = False
+        try:
+            Users.objects.get(username=username)
+        except Users.DoesNotExist:
+            unique_user = True
+        if not unique_user:
+            data['message'] = 'Пользователь с таким логином уже существует.'
+            data['input_name'] = 'username'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        
+        match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', username)
+        if match_symbols:
+            data['message'] = 'Логин должен состоять только из букв и цифр.'
+            data['input_name'] = 'username'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not username[0].isalpha():
+            data['message'] = 'Первым символом логина должна быть буква.'
+            data['input_name'] = 'username'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-            if len(username) < 4 or len(username) > 20:
-                data['message'] = 'Длина логина должна быть не меньше 4 и не больше 20.'
-                data['input_name'] = 'username'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        if len(username) < 4 or len(username) > 20:
+            data['message'] = 'Длина логина должна быть не меньше 4 и не больше 20.'
+            data['input_name'] = 'username'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-            password = request.data['password']
-            # Validate password
-            if len(password) < 6:
-                data['message'] = 'Длина пароля должна быть не меньше 6.'
-                data['input_name'] = 'password'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        # Validate password
+        password = request.data['password']
+        if len(password) < 6:
+            data['message'] = 'Длина пароля должна быть не меньше 6.'
+            data['input_name'] = 'password'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-            match_letters = re.search(r'[a-zA-Z]+', password)
-            match_numbers = re.search(r'[0-9]+', password)
-            match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', password)
-            if not match_letters or not match_numbers or not match_symbols:
-                data['message'] = 'В пароле должна быть хотя бы одна буква, одна цифра и один специальный символ.'
-                data['input_name'] = 'password'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        match_letters = re.search(r'[a-zA-Z]+', password)
+        match_numbers = re.search(r'[0-9]+', password)
+        match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', password)
+        if not match_letters or not match_numbers or not match_symbols:
+            data['message'] = 'В пароле должна быть хотя бы одна буква, одна цифра и один специальный символ.'
+            data['input_name'] = 'password'
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-            # Hashing password
-            request.data['password'] = make_password(request.data['password'])
+        # Hashing password
+        request.data['password'] = make_password(request.data['password'])
 
-            user_serializer = UsersSerializer(data=request.data)
-            if user_serializer.is_valid():
-                user_serializer.save()
-                return Response(user_serializer.data, status=status.HTTP_201_CREATED)
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # Try to find user by username
-            try:
-                user = Users.objects.get(username=request.data['username'])
-            except Users.DoesNotExist:
-                data['message'] = 'Неправильное имя пользователя или пароль.'
-                return Response(data, status=status.HTTP_404_NOT_FOUND)
-
-            # Match passwords
-            verify = django_pbkdf2_sha256.verify(request.data['password'], user.password)
-            if not verify:
-                data['message'] = 'Неправильное имя пользователя или пароль.'
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
-
-            data = {
-                'id': user.pk,
-                'username': user.username,
-                'full_name': user.full_name,
-                'email': user.email,
-                'password': user.password,
-                'role': user.role,
-            }
-            return Response(data, status=status.HTTP_200_OK)
+        user_serializer = UsersSerializer(data=request.data)
+        if user_serializer.is_valid():
+            user_serializer.save()
+            return Response(user_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# FOR BACKEND ONLY
 class UserDetail(APIView):
     """
     Retrieve, update or delete a user.

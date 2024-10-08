@@ -1,9 +1,12 @@
-import { useState, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom";
-import { API_URL_USERS } from '../../constants'
-import axios from "axios";
+import { useDispatch } from 'react-redux'
+import { rememberUser } from '../../features/user/userSlice'
 
-import { UserContext } from '../../components/UserContext';
+import Cookies from "universal-cookie";
+
+import { API_URL_USERS_LOGIN, API_URL_USERS_SESSION } from '../../constants'
+// import axios from 'axios';
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -11,10 +14,29 @@ import Col from "react-bootstrap/Col"
 
 export const SignIn = () => {
   const [message, setMessage] = useState('')
-  const [validated, setValidated] = useState(false);
-  const { setUser } = useContext(UserContext);
+  const [validated, setValidated] = useState(false)
 
+  const dispatch = useDispatch()
   const navigate = useNavigate()
+
+  const cookies = new Cookies();
+
+  const getSession = () => {
+    fetch(API_URL_USERS_SESSION, {
+      credentials: "same-origin",
+    })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  useEffect(() => {
+    getSession()
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,16 +56,26 @@ export const SignIn = () => {
       const data = {
         username: username,
         password: password,
-        create: false
       }
-      axios
-        .post(API_URL_USERS, data, {
-          'Content-Type': 'application/json'
-        })
-        .then(res => {
-          if (res.status === 200) {
-            const user = res.data
-            setUser(user)
+      // axios
+      //   .post(API_URL_USERS_LOGIN, data, {
+      //     'Content-Type': 'application/json',
+      //     "X-CSRFToken": cookies.get("csrftoken"),
+      //   })
+      fetch(API_URL_USERS_LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": cookies.get('csrftoken'),
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(data),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 200) {
+            const user = data.user
+            dispatch(rememberUser(user))
 
             navigate('/storage')
           }
