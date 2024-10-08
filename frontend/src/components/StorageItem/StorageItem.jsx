@@ -92,15 +92,15 @@ export const StorageItem = ({ file, getFiles }) => {
   const formatedCreated = moment(file.created).format('DD.MM.YYYY HH:mm:ss')
 
   let formatedSize = ''
-  if (file.size < 1000) {
+  if (file.size < 1024) {
     formatedSize = `${file.size} б`
-  } 
-  if (file.size >= 1000) {
-    const parsedSize = parseFloat(file.size / 1000).toFixed(1)
+  }
+  if (file.size >= 1024) {
+    const parsedSize = parseFloat(file.size / 1024).toFixed(1)
     formatedSize = `${parsedSize} Кб`
-  } 
-  if (file.size >= 1_000_000) {
-    const parsedSize = parseFloat(file.size / 1000000).toFixed(1)
+  }
+  if (file.size >= 1048576) {
+    const parsedSize = parseFloat(file.size / 1048576).toFixed(1)
     formatedSize = `${parsedSize} Мб`
   }
 
