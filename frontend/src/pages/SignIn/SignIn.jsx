@@ -1,127 +1,153 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux'
-import { rememberUser } from '../../features/user/userSlice'
+import { useDispatch } from "react-redux";
+import { rememberUser } from "../../features/user/userSlice";
 
-import Cookies from "universal-cookie";
+import axios from "axios";
+import { API_URL } from "../../constants";
 
-import { API_URL_USERS_LOGIN, API_URL_USERS_SESSION } from '../../constants'
-// import axios from 'axios';
-
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Col from "react-bootstrap/Col"
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Col from "react-bootstrap/Col";
 
 export const SignIn = () => {
-  const [message, setMessage] = useState('')
-  const [validated, setValidated] = useState(false)
+  const [isCsrf, setIsCsrf] = useState(null);
+  const [message, setMessage] = useState("");
+  const [validated, setValidated] = useState(false);
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const cookies = new Cookies();
+  const navigateUser = () => {
+    axios(API_URL + "user_info/", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          const user = {
+            id: res.data.id,
+            username: res.data.username,
+          };
+          dispatch(rememberUser(user));
+          navigate("/storage");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const getCSRF = () => {
+    axios
+      .get(API_URL + "csrf/", { withCredentials: true })
+      .then((res) => {
+        if (res.status === 200) {
+          const csrfToken = res.headers.get("X-CSRFToken");
+          setIsCsrf(csrfToken);
+        }
+      })
+      .catch((err) => console.error(err));
+  };
 
   const getSession = () => {
-    fetch(API_URL_USERS_SESSION, {
-      credentials: "same-origin",
-    })
-    .then((res) => res.json())
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  }
+    axios(API_URL + "session/", { withCredentials: true })
+      .then((res) => {
+        if (res.data.isAuthenticated) {
+          navigateUser();
+        } else {
+          getCSRF();
+        }
+      })
+      .catch((err) => console.error(err));
+  };
 
   useEffect(() => {
-    getSession()
-  }, [])
+    getSession();
+    // eslint-disable-next-line
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const form = e.currentTarget
+    const form = e.currentTarget;
 
-    let isValid = true
+    let isValid = true;
     if (form.checkValidity() === false) {
-      isValid = false
+      isValid = false;
     }
 
     setValidated(true);
 
     if (isValid) {
-      const username = form[0].value
-      const password = form[1].value
+      const username = form[0].value;
+      const password = form[1].value;
 
       const data = {
         username: username,
         password: password,
-      }
-      // axios
-      //   .post(API_URL_USERS_LOGIN, data, {
-      //     'Content-Type': 'application/json',
-      //     "X-CSRFToken": cookies.get("csrftoken"),
-      //   })
-      fetch(API_URL_USERS_LOGIN, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": cookies.get('csrftoken'),
-        },
-        credentials: "same-origin",
-        body: JSON.stringify(data),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 200) {
-            const user = data.user
-            dispatch(rememberUser(user))
-
-            navigate('/storage')
+      };
+      axios
+        .post(API_URL + "login/", data, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": isCsrf,
+          },
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            navigateUser();
           }
         })
-        .catch(err => {
-          const data = err.response.data
-
-          setMessage(data.message)
-          form[0].value = ''
-          form[1].value = ''
-        })
+        .catch((err) => {
+          if (err.status === 400) {
+            const data = err.response.data;
+            setMessage(data.message);
+            form[0].value = "";
+            form[1].value = "";
+          } else {
+            console.error(err);
+          }
+        });
     }
-  }
+  };
 
   return (
     <div className="sign-in">
-      <h1 className='sign-in__title'>Вход</h1>
+      <h1 className="sign-in__title">Вход</h1>
       <Form noValidate validated={validated} onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignInUsername'>
+        <Form.Group
+          className="mb-3"
+          as={Col}
+          md="3"
+          controlId="formSignInUsername"
+        >
           <Form.Label>Ваш логин</Form.Label>
-          <Form.Control
-            type='text'
-            placeholder='Введите логин'
-            required
-          />
+          <Form.Control type="text" placeholder="Введите логин" required />
           <Form.Control.Feedback type="invalid">
             Пожалуйта введите логин.
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group className="mb-3" as={Col} md="3" controlId='formSignInPassword'>
+        <Form.Group
+          className="mb-3"
+          as={Col}
+          md="3"
+          controlId="formSignInPassword"
+        >
           <Form.Label>Пароль</Form.Label>
-          <Form.Control
-            type='password'
-            placeholder='Введите пароль'
-            required
-          />
+          <Form.Control type="password" placeholder="Введите пароль" required />
           <Form.Control.Feedback type="invalid">
             Пожалуйта введите пароль.
           </Form.Control.Feedback>
         </Form.Group>
 
         <Form.Text>{message}</Form.Text>
-        {message !== '' ? (
+        {message !== "" ? (
           <>
             <br />
-            <Button variant="primary" type="submit" className='mt-3'>
+            <Button variant="primary" type="submit" className="mt-3">
               Войти
             </Button>
           </>
@@ -132,5 +158,5 @@ export const SignIn = () => {
         )}
       </Form>
     </div>
-  )
-}
+  );
+};

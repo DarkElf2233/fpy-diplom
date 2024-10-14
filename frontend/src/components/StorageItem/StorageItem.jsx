@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL_STORAGE } from '../../constants';
+import { API_URL } from '../../constants';
 
 import axios from 'axios'
 import moment from 'moment/moment';
@@ -37,7 +37,7 @@ export const StorageItem = ({ file, getFiles }) => {
     setIsLoading(true)
 
     axios
-      .get(API_URL_STORAGE + file.id + '?download=true')
+      .get(API_URL + 'storage/' + file.id + '?download=true')
       .then(res => {
         const url = res.data.download_url
         const filename = res.data.filename
@@ -64,7 +64,7 @@ export const StorageItem = ({ file, getFiles }) => {
 
   const handleSpecialLink = (e) => {
     axios
-      .get(API_URL_STORAGE + file.id + '?special=true')
+      .get(API_URL + 'storage/' + file.id + '?special=true')
       .then(res => {
         const url = res.data.special_url
 

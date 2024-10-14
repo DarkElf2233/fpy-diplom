@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL_STORAGE } from '../../constants'
+import { API_URL } from '../../constants'
 
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -7,7 +7,7 @@ import Modal from 'react-bootstrap/Modal';
 export const ConfirmFileDelete = ({ id, show, handleClose, getFiles  }) => {
   const handleDelete = () => {
     axios
-      .delete(API_URL_STORAGE + id)
+      .delete(API_URL + 'files/' + id)
       .then(() => {
         handleClose()
         getFiles()

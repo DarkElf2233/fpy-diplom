@@ -1,5 +1,8 @@
-import { useState, useEffect, useContext } from "react";
-import { API_URL_STORAGE } from "../../constants";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { rememberUser } from "../../features/user/userSlice";
+
+import { API_URL } from "../../constants";
 import axios from "axios";
 
 import Form from "react-bootstrap/Form";
@@ -7,32 +10,64 @@ import Button from "react-bootstrap/Button";
 import Table from "react-bootstrap/Table";
 import Col from "react-bootstrap/Col";
 
-import { UserContext } from "../../components/UserContext";
-
 import { StorageItem } from "../../components/StorageItem";
 import { NoPermission } from "../../components/NoPermission";
 
 export const Storage = () => {
   const [files, setFiles] = useState([]);
-  const { user } = useContext(UserContext);
-
+  const user = useSelector((state) => state.user.value);
   const [message, setMessage] = useState("");
+
+  const dispatch = useDispatch();
+
+  const userInfo = () => {
+    axios(API_URL + "user_info/", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          const user = {
+            id: res.data.id,
+            username: res.data.username,
+          };
+          dispatch(rememberUser(user));
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const getSession = () => {
+    axios(API_URL + "session/", { withCredentials: true })
+      .then((res) => {
+        if (res.data.isAuthenticated) {
+          userInfo();
+        }
+      })
+      .catch((err) => console.error(err));
+  };
 
   const getFiles = () => {
     if (!user) {
       return;
     }
-    axios.get(API_URL_STORAGE + `?pk=${user.id}`).then((res) => {
+    axios(API_URL + `storage/?pk=${user.payload.id}`).then((res) => {
       setFiles(res.data);
     });
   };
+
   useEffect(() => {
+    getSession();
     getFiles();
     // eslint-disable-next-line
   }, []);
 
   if (!user) {
-    return <NoPermission />;
+    <NoPermission />
   }
 
   const handleSubmit = (e) => {
@@ -55,9 +90,9 @@ export const Storage = () => {
     formData.append("title", image.name);
     formData.append("size", image.size);
     formData.append("comment", comment);
-    formData.append("user", user.id);
+    formData.append("user", user.payload.id);
     axios
-      .post(API_URL_STORAGE, formData, {
+      .post(API_URL + "storage/", formData, {
         headers: {
           "content-type": "multipart/form-data",
         },
@@ -65,13 +100,13 @@ export const Storage = () => {
         maxContentLength: 104857600,
       })
       .then(() => {
-        form[0].value = null
-        form[1].value = ""
-        setMessage("")
-        getFiles()
+        form[0].value = null;
+        form[1].value = "";
+        setMessage("");
+        getFiles();
       })
-      .catch((err) => console.log(err));
-  }
+      .catch((err) => console.error(err));
+  };
 
   return (
     <div className="storage">
@@ -125,5 +160,5 @@ export const Storage = () => {
         </Table>
       )}
     </div>
-  )
-}
+  );
+};

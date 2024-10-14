@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
-from django.http import Http404
+from django.http import Http404, JsonResponse
 
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,6 +26,12 @@ from storage.serializers import FilesSerializer, UsersSerializer
 
 ### Users ###
 
+# Django Auth
+def get_csrf(request):
+    response = JsonResponse({'detail': 'CSRF cookie set'})
+    response['X-CSRFToken'] = get_token(request)
+    return response
+
 @require_POST
 def login_view(request):
     data = json.loads(request.body)
@@ -32,38 +40,30 @@ def login_view(request):
     
     user = authenticate(username=username, password=password)
     if user is None:
-        return Response({
+        return JsonResponse({
             'message': 'Неправильное имя пользователя или пароль.'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     login(request, user)
-    user_serializer = UsersSerializer(user)
-    return Response({
-        'user': user_serializer.data,
-        'message': 'Успешная регистрация.'
-    })
+    return JsonResponse({'message': 'Успешная авторизация.'})
 
-
+@login_required
 def logout_view(request):
-    if not request.user.is_authenticated:
-        return Response({
-            'message': 'Вы не авторизаваны.'
-        }, status=status.HTTP_400_BAD_REQUEST)
     logout(request)
-    return Response({'message': 'Успешный выход.'})
-
+    return JsonResponse({'message': 'Успешный выход.'})
 
 @ensure_csrf_cookie
 def session_view(request):
     if not request.user.is_authenticated:
-        return Response({"isAuthenticated": False})
-    return Response({"isAuthenticated": True})
+        return JsonResponse({'isAuthenticated': False})
+    return JsonResponse({'isAuthenticated': True})
 
-
-def whoami_view(request):
-    if not request.user.is_authenticated:
-        return Response({'is_authenticated': False})
-    return Response({'username': request.user.username})
+@login_required
+def user_info(request):
+    return JsonResponse({
+        'username': request.user.username,
+        'id': request.user.id
+    })
 
 
 class UsersList(APIView):

@@ -32,6 +32,15 @@ INSTALLED_APPS = [
 
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -41,10 +50,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
 ]
 
 ROOT_URLCONF = 'my_cloud.urls'
@@ -73,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'my_cloud',
-        'USER': 'my_cloud_user',
-        'PASSWORD': 'cloud123',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432'
     }
@@ -97,20 +102,29 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Security settings
+# Security
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
 ]
 
-CSRF_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
+# DEV ONLY
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_HTTPONLY = True
 
-# For PROD
+# PROD ONLY
 # CSRF_COOKIE_HTTPONLY = True
 # SESSION_COOKIE_HTTPONLY = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+]
+
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
 LANGUAGE_CODE = 'Ru-ru'

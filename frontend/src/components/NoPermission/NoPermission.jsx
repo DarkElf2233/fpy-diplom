@@ -6,9 +6,9 @@ export const NoPermission = () => {
     <div className="error-message">
       <h1>401 - Нет доступа</h1>
       <h3>Упс, кажется вы ещё не зарегестрировались на сайте!</h3>
-      <RouterNavLink to='/'>
+      <RouterNavLink to='/signin'>
         <Button className="mt-3 me-3" variant="secondary">
-          На главную
+          Вход
         </Button>
       </RouterNavLink>
       <RouterNavLink to='/signup'>

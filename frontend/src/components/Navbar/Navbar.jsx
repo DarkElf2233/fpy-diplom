@@ -1,5 +1,5 @@
-import { useState, useContext } from 'react';
-import { UserContext } from '../UserContext';
+import { useState } from 'react';
+import { useSelector } from "react-redux";
 
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
@@ -10,7 +10,7 @@ import { ConfirmLogout } from '../ConfirmLogout';
 
 export const Navbar = () => {
   const [showLogout, setShowLogout] = useState(false);
-  const { user } = useContext(UserContext);
+  const user = useSelector((state) => state.user.value);
 
   const toggleLogout = () => setShowLogout(previousShow => {
     return !previousShow

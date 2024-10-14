@@ -10,7 +10,8 @@ urlpatterns = [
     path('login/', views.login_view),
     path('logout/', views.logout_view),
     path('session/', views.session_view),
-    path('whoami/', views.whoami_view), 
+    path('csrf/', views.get_csrf),
+    path('user_info/', views.user_info),
 
     path('users/', views.UsersList.as_view()),
     path('users/<int:pk>', views.UserDetail.as_view()),

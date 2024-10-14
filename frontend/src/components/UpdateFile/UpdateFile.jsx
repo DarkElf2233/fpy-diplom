@@ -1,4 +1,4 @@
-import { API_URL_STORAGE } from '../../constants'
+import { API_URL } from '../../constants'
 import axios from 'axios';
 
 import Modal from 'react-bootstrap/Modal';
@@ -18,7 +18,7 @@ export const UpdateFile = ({ file, handleClose, show }) => {
     file.comment = newComment
     delete file.file
     axios
-      .put(API_URL_STORAGE + file.id, file, {
+      .put(API_URL + 'storage/' + file.id, file, {
         'Content-Type': 'application/json'
       })
       .then(() => {

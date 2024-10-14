@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { useNavigate } from "react-router-dom";
-import { API_URL_USERS } from '../../constants'
+import { API_URL } from '../../constants'
 import axios from "axios";
 
 import { UserContext } from '../../components/UserContext';
@@ -41,7 +41,7 @@ export const SignUp = () => {
         create: true
       }
       axios
-        .post(API_URL_USERS, data, {
+        .post(API_URL + 'users/', data, {
           'Content-Type': 'application/json'
         })
         .then(res => {
