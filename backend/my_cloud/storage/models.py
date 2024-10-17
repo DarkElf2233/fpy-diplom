@@ -1,20 +1,26 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+
 from uuid import uuid4
 import os
 
 
-class Users(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    username = models.CharField(max_length=100)
-    full_name = models.CharField(max_length=100)
-    email = models.CharField(max_length=100)
-    password = models.CharField(max_length=100)
-    role = models.CharField(max_length=10, default='USER')
+class Users(AbstractUser):
+    username = models.CharField(verbose_name='Логин', max_length=50, unique=True)
+    first_name = models.CharField(verbose_name='Имя', max_length=40)
+    last_name = models.CharField(verbose_name='Фамилия', max_length=40)
+    email = models.CharField(max_length=50)
+    password = models.CharField(verbose_name='Пароль', max_length=100)
+    created = models.DateTimeField(verbose_name='Дата создания', auto_now_add=True)
+
+    is_staff = models.BooleanField(verbose_name='Является администратором', default=False)
+    is_active = models.BooleanField(verbose_name='Активный', default=True)
+    is_superuser = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['full_name']
-        verbose_name = 'User'
-        verbose_name_plural = 'Users'
+        ordering = ['id', 'username', 'first_name', 'last_name']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Список пользователей'
 
 
 def user_path(instance, filename):
@@ -24,15 +30,15 @@ def user_path(instance, filename):
 
 
 class Files(models.Model):
-    title = models.CharField(max_length=100)
-    comment = models.CharField(max_length=250, default='', blank=True)
-    size = models.IntegerField(default=0)
-    created = models.DateTimeField(auto_now_add=True)
-    last_download = models.DateTimeField(null=True)
-    user = models.ForeignKey(Users, default=1, on_delete=models.CASCADE)
+    title = models.CharField(verbose_name='Название файла', max_length=100)
+    comment = models.CharField(verbose_name='Комментарий', max_length=250, default='', blank=True)
+    size = models.IntegerField(verbose_name='Размер файла', default=0)
+    created = models.DateTimeField(verbose_name='Дата создания', auto_now_add=True)
+    last_download = models.DateTimeField(verbose_name='Дата последнего скачивания', null=True)
+    user = models.ForeignKey(Users, verbose_name='Пользователь', default=1, on_delete=models.CASCADE)
     file = models.FileField(upload_to=user_path, default='')
 
     class Meta:
-        ordering = ['created']
-        verbose_name = 'File'
-        verbose_name_plural = 'Files'
+        ordering = ['title', 'created']
+        verbose_name = 'Файл'
+        verbose_name_plural = 'Список файлов'

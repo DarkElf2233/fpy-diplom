@@ -14,60 +14,62 @@ import { StorageItem } from "../../components/StorageItem";
 import { NoPermission } from "../../components/NoPermission";
 
 export const Storage = () => {
-  const [files, setFiles] = useState([]);
   const user = useSelector((state) => state.user.value);
+  const [isCsrf, setIsCsrf] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
 
   const dispatch = useDispatch();
 
-  const userInfo = () => {
-    axios(API_URL + "user_info/", {
+  const getFiles = (userId) => {
+    axios(API_URL + `storage/?pk=${userId}`, {
       withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        if (res.status === 200) {
-          const user = {
-            id: res.data.id,
-            username: res.data.username,
-          };
-          dispatch(rememberUser(user));
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    }).then((res) => {
+      if (res.status === 200) {
+        setFiles(res.data);
+      }
+    });
   };
 
-  const getSession = () => {
-    axios(API_URL + "session/", { withCredentials: true })
+  const userInfo = () => {
+    axios(API_URL + "user_info/", { withCredentials: true }).then((res) => {
+      if (res.status === 200) {
+        getFiles(res.data.id);
+        dispatch(rememberUser(res.data));
+      }
+    });
+  };
+
+  const getCsrf = () => {
+    axios
+      .get(API_URL + "csrf/", { withCredentials: true })
       .then((res) => {
-        if (res.data.isAuthenticated) {
-          userInfo();
+        if (res.status === 200) {
+          const csrfToken = res.headers.get("X-CSRFToken");
+          setIsCsrf(csrfToken);
         }
       })
       .catch((err) => console.error(err));
   };
 
-  const getFiles = () => {
-    if (!user) {
-      return;
-    }
-    axios(API_URL + `storage/?pk=${user.payload.id}`).then((res) => {
-      setFiles(res.data);
+  const getSession = () => {
+    axios(API_URL + "session/", { withCredentials: true }).then((res) => {
+      if (res.data.isAuthenticated) {
+        userInfo();
+        getCsrf();
+        setIsAuthenticated(true);
+      }
     });
   };
 
   useEffect(() => {
     getSession();
-    getFiles();
     // eslint-disable-next-line
   }, []);
 
-  if (!user) {
-    <NoPermission />
+  if (!isAuthenticated) {
+    return <NoPermission />;
   }
 
   const handleSubmit = (e) => {
@@ -93,8 +95,10 @@ export const Storage = () => {
     formData.append("user", user.payload.id);
     axios
       .post(API_URL + "storage/", formData, {
+        withCredentials: true,
         headers: {
           "content-type": "multipart/form-data",
+          "X-CSRFToken": isCsrf,
         },
         maxBodyLength: 104857600,
         maxContentLength: 104857600,
@@ -103,7 +107,7 @@ export const Storage = () => {
         form[0].value = null;
         form[1].value = "";
         setMessage("");
-        getFiles();
+        getFiles(user.payload.id);
       })
       .catch((err) => console.error(err));
   };
@@ -154,7 +158,13 @@ export const Storage = () => {
           </thead>
           <tbody>
             {files.map((file) => (
-              <StorageItem key={file.id} file={file} getFiles={getFiles} />
+              <StorageItem
+                key={file.id}
+                file={file}
+                userId={user.payload.id}
+                getFiles={getFiles}
+                isCsrf={isCsrf}
+              />
             ))}
           </tbody>
         </Table>

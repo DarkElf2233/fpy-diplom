@@ -8,20 +8,20 @@ from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from passlib.handlers.django import django_pbkdf2_sha256
 import json
-import re
+
 import datetime
 import os
 from uuid import uuid4
 
 from storage.models import Users, Files
 from storage.serializers import FilesSerializer, UsersSerializer
+from storage.validations import validate_password, validate_username, validate_file_size
 
 
 ### Users ###
@@ -66,63 +66,21 @@ def user_info(request):
     })
 
 
-class UsersList(APIView):
+class UsersRegister(APIView):
     """
-    List all users, or create a new user.
+    Create a new user.
     """
-    def get(self, request, format=None):
-        users = Users.objects.all()
-        user_serializer = UsersSerializer(users, many=True)
-        return Response(user_serializer.data)
-
-    def post(self, request, format=None):
-        data = {
-            'message': '',
-            'input_name': ''
-        }
-
-        # Validate username
-        username = request.data['username']
-        
-        unique_user = False
-        try:
-            Users.objects.get(username=username)
-        except Users.DoesNotExist:
-            unique_user = True
-        if not unique_user:
-            data['message'] = 'Пользователь с таким логином уже существует.'
-            data['input_name'] = 'username'
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-        
-        match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', username)
-        if match_symbols:
-            data['message'] = 'Логин должен состоять только из букв и цифр.'
-            data['input_name'] = 'username'
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not username[0].isalpha():
-            data['message'] = 'Первым символом логина должна быть буква.'
-            data['input_name'] = 'username'
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-
-        if len(username) < 4 or len(username) > 20:
-            data['message'] = 'Длина логина должна быть не меньше 4 и не больше 20.'
-            data['input_name'] = 'username'
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data = {}
+        # Validata username
+        data = validate_username(request.data['username'])
+        if data != True:
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
         # Validate password
-        password = request.data['password']
-        if len(password) < 6:
-            data['message'] = 'Длина пароля должна быть не меньше 6.'
-            data['input_name'] = 'password'
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-
-        match_letters = re.search(r'[a-zA-Z]+', password)
-        match_numbers = re.search(r'[0-9]+', password)
-        match_symbols = re.search(r'[\'\"\`@_!#$%^&*()<>?/\|}{~:]+', password)
-        if not match_letters or not match_numbers or not match_symbols:
-            data['message'] = 'В пароле должна быть хотя бы одна буква, одна цифра и один специальный символ.'
-            data['input_name'] = 'password'
+        data = validate_password(request.data['password'])
+        if data != True:
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
         # Hashing password
@@ -135,10 +93,24 @@ class UsersList(APIView):
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UsersList(APIView):
+    """
+    List all users.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        users = Users.objects.all()
+        user_serializer = UsersSerializer(users, many=True)
+        return Response(user_serializer.data)  
+
+
 class UserDetail(APIView):
     """
     Retrieve, update or delete a user.
     """
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Users.objects.get(pk=pk)
@@ -162,7 +134,7 @@ class UserDetail(APIView):
         user = self.get_object(pk)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 ### Files ###
 
@@ -170,6 +142,7 @@ class FilesList(APIView):
     """
     List all files, or create a new file.
     """
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
     def get(self, request, format=None):
@@ -183,10 +156,10 @@ class FilesList(APIView):
         file_serializer = FilesSerializer(files, many=True)
         return Response(file_serializer.data)
 
-
     def post(self, request, format=None):
-        if int(request.data['size']) >= 104_857_600:
-            return Response({ 'message': 'Too long'}, status=status.HTTP_400_BAD_REQUEST)
+        data = validate_file_size(request.data['size'])
+        if data != True:
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
         file_serializer = FilesSerializer(data=request.data)
         if file_serializer.is_valid():
@@ -199,6 +172,8 @@ class FileDetail(APIView):
     """
     Retrieve, update or delete a file.
     """
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Files.objects.get(pk=pk)

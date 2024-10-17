@@ -1,107 +1,112 @@
-import { useState } from 'react';
-import { API_URL } from '../../constants';
+import { useState } from "react";
+import { API_URL } from "../../constants";
 
-import axios from 'axios'
-import moment from 'moment/moment';
+import axios from "axios";
+import moment from "moment/moment";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import Badge from 'react-bootstrap/Badge'
-import Overlay from 'react-bootstrap/Overlay';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
-import Tooltip from 'react-bootstrap/Tooltip';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Badge from "react-bootstrap/Badge";
+import Overlay from "react-bootstrap/Overlay";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Popover from "react-bootstrap/Popover";
+import Tooltip from "react-bootstrap/Tooltip";
 
-import { ConfirmFileDelete } from '../ConfirmFileDelete';
-import { UpdateFile } from '../UpdateFile';
+import { ConfirmFileDelete } from "../ConfirmFileDelete";
+import { UpdateFile } from "../UpdateFile";
 
-export const StorageItem = ({ file, getFiles }) => {
-  const [showUpdate, setShowUpdate] = useState(false)
-  const [showDelete, setShowDelete] = useState(false)
+export const StorageItem = ({ file, userId, getFiles, isCsrf }) => {
+  const [showUpdate, setShowUpdate] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
-  const [showPopover, setShowPopover] = useState(false)
-  const [target, setTarget] = useState(null)
+  const [showPopover, setShowPopover] = useState(false);
+  const [target, setTarget] = useState(null);
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleUpdate = () => setShowUpdate(previousShow => {
-    return !previousShow
-  })
-  const toggleDelete = () => setShowDelete(previousShow => {
-    return !previousShow
-  })
-  const togglePopover = () => setShowPopover(previousShow => {
-    return !previousShow
-  })
+  const toggleUpdate = () =>
+    setShowUpdate((previousShow) => {
+      return !previousShow;
+    });
+  const toggleDelete = () =>
+    setShowDelete((previousShow) => {
+      return !previousShow;
+    });
+  const togglePopover = () =>
+    setShowPopover((previousShow) => {
+      return !previousShow;
+    });
 
   const handleDownload = () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
-    axios
-      .get(API_URL + 'storage/' + file.id + '?download=true')
-      .then(res => {
-        const url = res.data.download_url
-        const filename = res.data.filename
+    axios(API_URL + "storage/" + file.id + "?download=true", {
+      withCredentials: true,
+    }).then((res) => {
+      const url = res.data.download_url;
+      const filename = res.data.filename;
 
-        const linkElement = document.createElement('a')
-        linkElement.href = url
-        linkElement.download = filename
-        linkElement.target = '_blank'
+      const linkElement = document.createElement("a");
+      linkElement.href = url;
+      linkElement.download = filename;
+      linkElement.target = "_blank";
 
-        document.body.appendChild(linkElement)
-        linkElement.click()
-        document.body.removeChild(linkElement)
+      document.body.appendChild(linkElement);
+      linkElement.click();
+      document.body.removeChild(linkElement);
 
-        getFiles()
-      })
-  }
+      getFiles(userId);
+    });
+  };
 
   const handleCopy = (e) => {
-    console.log(e)
-    const url = e.currentTarget.url
-    e.clipboardData.setData('text/plain', url);
+    console.log(e);
+    const url = e.currentTarget.url;
+    e.clipboardData.setData("text/plain", url);
     e.preventDefault();
-  }
+  };
 
   const handleSpecialLink = (e) => {
-    axios
-      .get(API_URL + 'storage/' + file.id + '?special=true')
-      .then(res => {
-        const url = res.data.special_url
+    axios(API_URL + "storage/" + file.id + "?special=true", {
+      withCredentials: true,
+    }).then((res) => {
+      const url = res.data.special_url;
 
-        document.addEventListener('copy', handleCopy)
-        document.url = url
-        document.execCommand('copy');
+      document.addEventListener("copy", handleCopy);
+      document.url = url;
+      document.execCommand("copy");
 
-        document.removeEventListener('copy', handleCopy)
-      })
+      document.removeEventListener("copy", handleCopy);
+    });
 
-    togglePopover()
-    setTarget(e.target)
+    togglePopover();
+    setTarget(e.target);
     setTimeout(() => {
-      togglePopover()
-    }, 1000)
-  }
+      togglePopover();
+    }, 1000);
+  };
 
-  let formatedLastDownload = file.last_download
+  let formatedLastDownload = file.last_download;
   if (file.last_download === null) {
-    formatedLastDownload = 'Вы ещё не скачивали этот файл.'
+    formatedLastDownload = "Вы ещё не скачивали этот файл.";
   } else {
-    formatedLastDownload = moment(file.last_download).format('DD.MM.YYYY HH:mm:ss')
+    formatedLastDownload = moment(file.last_download).format(
+      "DD.MM.YYYY HH:mm:ss"
+    );
   }
 
-  const formatedCreated = moment(file.created).format('DD.MM.YYYY HH:mm:ss')
+  const formatedCreated = moment(file.created).format("DD.MM.YYYY HH:mm:ss");
 
-  let formatedSize = ''
+  let formatedSize = "";
   if (file.size < 1024) {
-    formatedSize = `${file.size} б`
+    formatedSize = `${file.size} б`;
   }
   if (file.size >= 1024) {
-    const parsedSize = parseFloat(file.size / 1024).toFixed(1)
-    formatedSize = `${parsedSize} Кб`
+    const parsedSize = parseFloat(file.size / 1024).toFixed(1);
+    formatedSize = `${parsedSize} Кб`;
   }
   if (file.size >= 1048576) {
-    const parsedSize = parseFloat(file.size / 1048576).toFixed(1)
-    formatedSize = `${parsedSize} Мб`
+    const parsedSize = parseFloat(file.size / 1048576).toFixed(1);
+    formatedSize = `${parsedSize} Мб`;
   }
 
   return (
@@ -110,18 +115,19 @@ export const StorageItem = ({ file, getFiles }) => {
       <td>{formatedSize}</td>
       <td>{formatedCreated}</td>
       <td>{formatedLastDownload}</td>
-      <td className='storage-comment'>{file.comment}</td>
+      <td className="storage-comment">{file.comment}</td>
       <td>
         <OverlayTrigger
           placement="top"
           delay={{ show: 200, hide: 250 }}
-          overlay={
-            <Tooltip id="download-tooltip">
-              Скачать
-            </Tooltip>
-          }
+          overlay={<Tooltip id="download-tooltip">Скачать</Tooltip>}
         >
-          <Badge bg='primary' text='light' disabled={isLoading} onClick={handleDownload}>
+          <Badge
+            bg="primary"
+            text="light"
+            disabled={isLoading}
+            onClick={handleDownload}
+          >
             <FontAwesomeIcon icon="fa-solid fa-download" />
           </Badge>
         </OverlayTrigger>
@@ -129,13 +135,14 @@ export const StorageItem = ({ file, getFiles }) => {
         <OverlayTrigger
           placement="top"
           delay={{ show: 250, hide: 400 }}
-          overlay={
-            <Tooltip id="edit-tooltip">
-              Изменить
-            </Tooltip>
-          }
+          overlay={<Tooltip id="edit-tooltip">Изменить</Tooltip>}
         >
-          <Badge className='mx-4 mt-1' bg='success' text='light' onClick={toggleUpdate}>
+          <Badge
+            className="mx-4 mt-1"
+            bg="success"
+            text="light"
+            onClick={toggleUpdate}
+          >
             <FontAwesomeIcon icon="fa-solid fa-pencil" />
           </Badge>
         </OverlayTrigger>
@@ -143,13 +150,14 @@ export const StorageItem = ({ file, getFiles }) => {
         <OverlayTrigger
           placement="top"
           delay={{ show: 250, hide: 400 }}
-          overlay={
-            <Tooltip id="delete-tooltip">
-              Удалить
-            </Tooltip>
-          }
+          overlay={<Tooltip id="delete-tooltip">Удалить</Tooltip>}
         >
-          <Badge className='me-4' bg='danger' text='light' onClick={toggleDelete}>
+          <Badge
+            className="me-4"
+            bg="danger"
+            text="light"
+            onClick={toggleDelete}
+          >
             <FontAwesomeIcon icon="fa-solid fa-xmark" />
           </Badge>
         </OverlayTrigger>
@@ -157,32 +165,29 @@ export const StorageItem = ({ file, getFiles }) => {
         <OverlayTrigger
           placement="right"
           delay={{ show: 250, hide: 400 }}
-          overlay={
-            <Tooltip id="share-tooltip">
-              Поделиться
-            </Tooltip>
-          }
+          overlay={<Tooltip id="share-tooltip">Поделиться</Tooltip>}
         >
-          <Badge bg='info' text='light' onClick={handleSpecialLink}>
+          <Badge bg="info" text="light" onClick={handleSpecialLink}>
             <FontAwesomeIcon icon="fa-solid fa-arrow-up-from-bracket" />
           </Badge>
         </OverlayTrigger>
 
-        <Overlay
-          show={showPopover}
-          target={target}
-          placement="top"
-        >
+        <Overlay show={showPopover} target={target} placement="top">
           <Popover id="storage-item-popover">
-            <Popover.Body>
-              Ссылка скопирована!
-            </Popover.Body>
+            <Popover.Body>Ссылка скопирована!</Popover.Body>
           </Popover>
         </Overlay>
       </td>
 
-      <UpdateFile file={file} handleClose={toggleUpdate} show={showUpdate} />
-      <ConfirmFileDelete id={file.id} handleClose={toggleDelete} show={showDelete} getFiles={getFiles} />
+      <UpdateFile file={file} handleClose={toggleUpdate} show={showUpdate} isCsrf={isCsrf} />
+      <ConfirmFileDelete
+        id={file.id}
+        handleClose={toggleDelete}
+        show={showDelete}
+        userId={userId}
+        getFiles={getFiles}
+        isCsrf={isCsrf}
+      />
     </tr>
-  )
-}
+  );
+};

@@ -103,6 +103,7 @@ export const SignIn = () => {
         })
         .catch((err) => {
           if (err.status === 400) {
+            console.log(err)
             const data = err.response.data;
             setMessage(data.message);
             form[0].value = "";
