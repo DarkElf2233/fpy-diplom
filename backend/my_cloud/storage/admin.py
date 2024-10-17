@@ -13,3 +13,4 @@ class UsersAdmin(admin.ModelAdmin):
 @admin.register(Files)
 class FilesAdmin(admin.ModelAdmin):
     list_display = ['title', 'comment', 'size', 'created', 'user']
+    exclude = ['file']
