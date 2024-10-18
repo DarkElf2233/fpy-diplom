@@ -112,63 +112,67 @@ export const Storage = () => {
       .catch((err) => console.error(err));
   };
 
-  return (
-    <div className="storage">
-      <h1 className="storage__title">Ваше Хранилище</h1>
+  if (user === null) {
+    return <></>
+  } else {
+    return (
+      <div className="storage">
+        <h1 className="storage__title">Ваше Хранилище</h1>
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group as={Col} md="4" className="" controlId="formStorageFile">
-          <Form.Label>Добавить новый файл</Form.Label>
-          <Form.Control type="file" />
-        </Form.Group>
-        <Form.Group
-          className="mt-3"
-          as={Col}
-          md="4"
-          controlId="formStorageComment"
-        >
-          <Form.Label>Комментарий (опциональный)</Form.Label>
-          <Form.Control type="text" as="textarea" rows={3} />
-        </Form.Group>
+        <Form onSubmit={handleSubmit}>
+          <Form.Group as={Col} md="4" className="" controlId="formStorageFile">
+            <Form.Label>Добавить новый файл</Form.Label>
+            <Form.Control type="file" />
+          </Form.Group>
+          <Form.Group
+            className="mt-3"
+            as={Col}
+            md="4"
+            controlId="formStorageComment"
+          >
+            <Form.Label>Комментарий (опциональный)</Form.Label>
+            <Form.Control type="text" as="textarea" rows={3} />
+          </Form.Group>
 
-        {message ? (
-          <Form.Text className="d-block mt-3">{message}</Form.Text>
+          {message ? (
+            <Form.Text className="d-block mt-3">{message}</Form.Text>
+          ) : (
+            <Form.Text>{message}</Form.Text>
+          )}
+
+          <Button type="submit" className="mt-3 mb-4">
+            Добавить
+          </Button>
+        </Form>
+
+        {!files || files.length <= 0 ? (
+          <p>Упс, вы ещё не загрузили ни одного файла.</p>
         ) : (
-          <Form.Text>{message}</Form.Text>
+          <Table>
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Размер</th>
+                <th>Дата загрузки</th>
+                <th>Дата последнего скачивания</th>
+                <th>Комментарий</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {files.map((file) => (
+                <StorageItem
+                  key={file.id}
+                  file={file}
+                  userId={user.payload.id}
+                  getFiles={getFiles}
+                  isCsrf={isCsrf}
+                />
+              ))}
+            </tbody>
+          </Table>
         )}
-
-        <Button type="submit" className="mt-3 mb-4">
-          Добавить
-        </Button>
-      </Form>
-
-      {!files || files.length <= 0 ? (
-        <p>Упс, вы ещё не загрузили ни одного файла.</p>
-      ) : (
-        <Table>
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>Размер</th>
-              <th>Дата загрузки</th>
-              <th>Дата последнего скачивания</th>
-              <th>Комментарий</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file) => (
-              <StorageItem
-                key={file.id}
-                file={file}
-                userId={user.payload.id}
-                getFiles={getFiles}
-                isCsrf={isCsrf}
-              />
-            ))}
-          </tbody>
-        </Table>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
 };

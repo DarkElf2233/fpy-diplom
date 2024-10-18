@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -97,7 +97,7 @@ class UsersList(APIView):
     """
     List all users.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, format=None):
         users = Users.objects.all()
@@ -148,9 +148,12 @@ class FilesList(APIView):
     def get(self, request, format=None):
         user_id = request.GET.get('pk', None)
         if user_id == None:
-            files = Files.objects.all()
-            file_serializer = FilesSerializer(files, many=True)
-            return Response(file_serializer.data)
+            user = Users.objects.get(id=request.user.id)
+            if user.is_staff:
+                files = Files.objects.all()
+                file_serializer = FilesSerializer(files, many=True)
+                return Response(file_serializer.data, status=status.HTTP_200_OK)
+            return Response({ 'details': 'Нет доступа.' }, status=status.HTTP_403_FORBIDDEN)
 
         files = Files.objects.filter(user=user_id)
         file_serializer = FilesSerializer(files, many=True)
